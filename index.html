@@ -28,19 +28,18 @@
             color: var(--text-main); 
             font-family: -apple-system, BlinkMacSystemFont, sans-serif; 
             padding-bottom: 240px; 
-            transition: background 1s ease; /* Transisi warna background */
+            transition: background 1s ease;
         }
 
         .container { padding: 15px; max-width: 800px; margin: 0 auto; }
 
-        /* Banner Cinematic Fix */
         .banner-container { 
             width: 100%; height: 250px; border-radius: 30px; 
             overflow: hidden; margin-bottom: 20px; 
             box-shadow: 0 15px 35px rgba(0,0,0,0.1);
             background: #e5e5ea;
         }
-        .swiper-slide { position: relative; width: 100%; height: 100%; background: #000; }
+        .swiper-slide { position: relative; width: 100%; height: 100%; background: #000; cursor: pointer; }
         .swiper-slide img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .banner-overlay { 
             position: absolute; inset: 0; 
@@ -57,17 +56,18 @@
         }
         .search-box input { border: none; outline: none; background: transparent; width: 100%; font-size: 16px; }
 
-        /* Music Cards */
         .grid-music { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px; }
         .card { 
             background: var(--glass); backdrop-filter: blur(15px);
             padding: 12px; border-radius: 26px; border: 1px solid rgba(255,255,255,0.5);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.03); opacity: 0; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.03);
+            animation: fadeIn 0.4s ease-out;
         }
-        .thumb-box { width: 100%; aspect-ratio: 1/1; border-radius: 18px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }
-        .thumb-box img { width: 100%; height: 100%; object-fit: cover !important; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Full Interactive Player */
+        .thumb-box { width: 100%; aspect-ratio: 1/1; border-radius: 18px; overflow: hidden; margin-bottom: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); cursor: pointer; }
+        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+
         .player-wrapper {
             position: fixed; bottom: 100px; left: 12px; right: 12px;
             background: var(--glass); backdrop-filter: blur(30px);
@@ -82,15 +82,13 @@
 
         .player-controls { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; padding: 0 10px; }
         .main-btns { display: flex; align-items: center; gap: 25px; }
-        #btnPlayPause { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: white; display: grid; place-items: center; font-size: 20px; box-shadow: 0 5px 15px rgba(255, 45, 85, 0.4); }
+        #btnPlayPause { width: 50px; height: 50px; border-radius: 50%; background: var(--accent); color: white; display: grid; place-items: center; font-size: 20px; box-shadow: 0 5px 15px rgba(255, 45, 85, 0.4); cursor: pointer; }
 
-        /* Nav Bottom */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: rgba(255,255,255,0.95); backdrop-filter: blur(15px); display: flex; justify-content: space-around; padding: 15px 0 35px; border-top: 1px solid rgba(0,0,0,0.05); z-index: 1001; }
-        .nav-item { text-align: center; color: #8e8e93; text-decoration: none; font-size: 11px; font-weight: 600; }
+        .nav-item { text-align: center; color: #8e8e93; text-decoration: none; font-size: 11px; font-weight: 600; cursor: pointer; }
         .nav-item.active { color: var(--accent); }
         .nav-item i { font-size: 24px; display: block; margin-bottom: 4px; }
 
-        /* Modal Edit Modern */
         .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.5); display: none; z-index: 2000; align-items: flex-end; backdrop-filter: blur(10px); }
         .modal-content { background: white; width: 100%; padding: 35px; border-radius: 35px 35px 0 0; box-shadow: 0 -10px 30px rgba(0,0,0,0.1); }
         .modal-content h3 { font-size: 24px; font-weight: 800; margin-bottom: 20px; text-align: center; }
@@ -102,7 +100,7 @@
     <div class="container">
         <header style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0 20px;">
             <h1 style="font-size: 32px; font-weight: 900; letter-spacing: -1.5px;">Nell<span style="color:var(--accent)">Music</span></h1>
-            <div id="statusNotif" style="font-size: 12px; color: var(--accent); font-weight: 600;"></div>
+            <div id="statusNotif" style="font-size: 12px; color: var(--accent); font-weight: 600;">STREAMING LIVE</div>
         </header>
 
         <div class="swiper banner-container" id="mainSwiper">
@@ -120,7 +118,6 @@
 
     <div class="player-wrapper" id="miniPlayer">
         <div class="progress-bar" id="pSeek"><div id="pFill"></div></div>
-        
         <span class="up-next-label" id="upNextInfo">Up Next: -</span>
         
         <div style="display: flex; align-items: center; gap: 15px;">
@@ -146,14 +143,14 @@
     </div>
 
     <nav class="bottom-nav">
-        <a href="#" class="nav-item active"><i class="fas fa-play-circle"></i>Listen</a>
-        <a href="javascript:void(0)" onclick="window.checkPass('upload')" class="nav-item"><i class="fas fa-plus-circle"></i>Upload</a>
-        <a href="#" class="nav-item" onclick="Swal.fire('Studio Mode', 'Feature coming soon!', 'info')"><i class="fas fa-sliders-h"></i>Studio</a>
+        <a class="nav-item active"><i class="fas fa-play-circle"></i>Listen</a>
+        <a onclick="window.checkPass('upload')" class="nav-item"><i class="fas fa-plus-circle"></i>Upload</a>
+        <a class="nav-item" onclick="Swal.fire('Studio Mode', 'Feature coming soon!', 'info')"><i class="fas fa-sliders-h"></i>Studio</a>
     </nav>
 
     <div id="adminModal" class="modal">
         <div class="modal-content" id="mContent">
-            <h3>Music Studio</h3>
+            <h3 id="modalTitle">Music Studio</h3>
             <form id="uploadForm">
                 <input type="text" id="songTitle" placeholder="Song Title" required>
                 <input type="text" id="songArtist" placeholder="Artist" required>
@@ -164,12 +161,12 @@
                 </label>
                 <input type="file" id="songFile" style="display:none;">
                 <button type="submit" id="btnUpload" style="width:100%; padding:18px; background:var(--accent); color:white; border:none; border-radius:15px; font-weight:700; font-size: 16px; box-shadow: 0 10px 20px rgba(255,45,85,0.2);">SAVE TO CLOUD</button>
-                <button type="button" onclick="window.toggleAdmin()" style="width:100%; background:none; border:none; color:#888; margin-top:15px;">CANCEL</button>
+                <button type="button" onclick="window.toggleAdmin()" style="width:100%; background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">CANCEL</button>
             </form>
         </div>
     </div>
 
-    <audio id="mainAudio"></audio>
+    <audio id="mainAudio" preload="auto"></audio>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
@@ -199,36 +196,29 @@
         let swiperInstance = null;
         const audio = document.getElementById('mainAudio');
 
-        // Notification System
-        if ("Notification" in window) {
-            Notification.requestPermission().then(res => {
-                if(res === 'granted') document.getElementById('statusNotif').innerText = "LIVE NOTIF ON";
-            });
-        }
-
-        // Load Data
-        let firstLoad = true;
+        // --- ULTRA-FAST REAL-TIME SYNC ---
+        // Kita gunakan onValue untuk snapshot pertama DAN setiap kali ada perubahan apapun
         onValue(musicRef, (snapshot) => {
             const data = snapshot.val();
             const newList = [];
-            if (data) Object.keys(data).forEach(key => newList.push({ id: key, ...data[key] }));
             
-            if (!firstLoad && newList.length > musicList.length) {
-                const newest = newList[newList.length - 1];
-                if (Notification.permission === "granted") {
-                    new Notification("Lagu Baru!", { body: `${newest.title} - ${newest.artist}`, icon: newest.cover });
-                }
+            if (data) {
+                Object.keys(data).forEach(key => {
+                    newList.push({ id: key, ...data[key] });
+                });
+                // Sortir Terbaru Berdasarkan ID (Push ID Firebase selalu urut waktu)
+                newList.reverse(); 
             }
-            
+
             musicList = newList;
-            firstLoad = false;
-            const rev = [...musicList].reverse();
-            renderMusic(rev);
-            renderBanner(rev.slice(0, 6));
+            renderMusic(musicList);
+            renderBanner(musicList.slice(0, 6));
+            updateUpNext();
         });
 
         function renderBanner(data) {
             const wrapper = document.getElementById('bannerWrapper');
+            if (data.length === 0) return;
             wrapper.innerHTML = data.map(item => `
                 <div class="swiper-slide" onclick="window.playNow('${item.id}')">
                     <img src="${item.cover}" onerror="this.src='https://via.placeholder.com/800x400?text=No+Image'">
@@ -241,7 +231,7 @@
 
             if (swiperInstance) swiperInstance.destroy();
             swiperInstance = new Swiper('#mainSwiper', {
-                loop: true,
+                loop: data.length > 1,
                 autoplay: { delay: 4000, disableOnInteraction: false },
                 pagination: { el: '.swiper-pagination', clickable: true },
                 observer: true,
@@ -251,30 +241,36 @@
 
         function renderMusic(data) {
             const container = document.getElementById('musicGrid');
-            container.innerHTML = data.map((item) => `
+            const searchVal = (document.getElementById('searchInput').value || "").toLowerCase();
+            
+            const filtered = data.filter(item => 
+                (item.title || "").toLowerCase().includes(searchVal) || 
+                (item.artist || "").toLowerCase().includes(searchVal)
+            );
+
+            container.innerHTML = filtered.map((item) => `
                 <div class="card">
-                    <div class="thumb-box"><img src="${item.cover}" onclick="window.playNow('${item.id}')" loading="lazy"></div>
-                    <h4>${item.title}</h4>
-                    <p>${item.artist}</p>
-                    <div class="card-actions" style="display:flex; gap:5px;">
-                        <button class="btn-card" onclick="window.checkPass('edit', '${item.id}')" style="flex:1; height:35px; border-radius:10px; border:none; background:#f2f2f7;"><i class="fas fa-edit"></i></button>
-                        <button class="btn-card" onclick="window.checkPass('delete', '${item.id}')" style="flex:1; height:35px; border-radius:10px; border:none; background:#f2f2f7;"><i class="fas fa-trash"></i></button>
-                        <button class="btn-card" onclick="window.downloadFile('${item.url}', '${item.title}')" style="flex:1; height:35px; border-radius:10px; border:none; background:#f2f2f7;"><i class="fas fa-download"></i></button>
+                    <div class="thumb-box"><img src="${item.cover}" onclick="window.playNow('${item.id}')" loading="lazy" onerror="this.src='https://via.placeholder.com/300?text=No+Cover'"></div>
+                    <h4 style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${item.title}</h4>
+                    <p style="font-size:13px; color:var(--text-sub); overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${item.artist}</p>
+                    <div class="card-actions" style="display:flex; gap:5px; margin-top:10px;">
+                        <button class="btn-card" onclick="window.checkPass('edit', '${item.id}')" style="flex:1; height:35px; border-radius:10px; border:none; background:rgba(0,0,0,0.05); cursor:pointer;"><i class="fas fa-edit"></i></button>
+                        <button class="btn-card" onclick="window.checkPass('delete', '${item.id}')" style="flex:1; height:35px; border-radius:10px; border:none; background:rgba(0,0,0,0.05); cursor:pointer;"><i class="fas fa-trash"></i></button>
+                        <button class="btn-card" onclick="window.downloadFile('${item.url}', '${item.title}')" style="flex:1; height:35px; border-radius:10px; border:none; background:rgba(0,0,0,0.05); cursor:pointer;"><i class="fas fa-download"></i></button>
                     </div>
                 </div>
             `).join('');
-            gsap.to(".card", { opacity: 1, y: 0, stagger: 0.1 });
         }
 
-        // Logic & Protection
+        // Logic & Admin
         window.checkPass = async (action, id = null) => {
             const { value: pass } = await Swal.fire({ title: 'Admin Verification', input: 'password', confirmButtonColor: '#ff2d55' });
             if (pass === "Ishnelsen060906") {
-                if(action === 'upload') window.toggleAdmin();
+                if(action === 'upload') { editId = null; document.getElementById('uploadForm').reset(); document.getElementById('modalTitle').innerText = "Upload Music"; window.toggleAdmin(); }
                 if(action === 'edit') window.editMusic(id);
                 if(action === 'delete') window.deleteMusic(id);
             } else if(pass) {
-                Swal.fire('Denied', 'Incorrect Password!', 'error');
+                Swal.fire('Denied', 'Salah Password!', 'error');
             }
         };
 
@@ -292,66 +288,70 @@
         window.editMusic = (id) => {
             const song = musicList.find(s => s.id === id);
             editId = id;
+            document.getElementById('modalTitle').innerText = "Edit Music";
             document.getElementById('songTitle').value = song.title;
             document.getElementById('songArtist').value = song.artist;
+            document.getElementById('ytLink').value = "";
+            document.getElementById('manualThumb').value = song.cover;
             window.toggleAdmin();
         };
 
         window.deleteMusic = (id) => {
-            Swal.fire({ title: 'Delete Permanent?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff2d55' })
+            Swal.fire({ title: 'Hapus Lagu?', icon: 'warning', showCancelButton: true, confirmButtonColor: '#ff2d55' })
                 .then(r => { if(r.isConfirmed) remove(ref(database, `songs/${id}`)); });
         };
 
-        // Advanced Player Controls
+        // --- FAST PLAYER CORE ---
         window.playNow = (id) => {
             const song = musicList.find(s => s.id === id);
             currentIdx = musicList.findIndex(s => s.id === id);
+            
+            // Set source & Trigger play SECEPAT MUNGKIN
             audio.src = song.url;
-            audio.play();
+            audio.load();
+            const playPromise = audio.play();
+
+            if (playPromise !== undefined) {
+                playPromise.then(() => {
+                    document.getElementById('btnPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
+                }).catch(error => { console.log("Playback delayed"); });
+            }
             
             document.getElementById('miniPlayer').style.display = 'block';
             document.getElementById('pTitle').innerText = song.title;
             document.getElementById('pArtist').innerText = song.artist;
             document.getElementById('pCover').src = song.cover;
-            document.getElementById('btnPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
             document.getElementById('pDownloadBtn').onclick = () => window.downloadFile(song.url, song.title);
             
-            // Update Background Ambient
-            document.body.style.background = `linear-gradient(to bottom, #f2f2f7, #ffffff)`; // Reset first
             updateUpNext();
-            gsap.from("#miniPlayer", { y: 100, opacity: 0 });
+            gsap.fromTo("#miniPlayer", { y: 50, opacity: 0 }, { y: 0, opacity: 1, duration: 0.3 });
         };
 
         function updateUpNext() {
+            if (musicList.length <= 1) return;
             let nextIdx = (currentIdx + 1) % musicList.length;
             if(isShuffle) nextIdx = Math.floor(Math.random() * musicList.length);
             const nextSong = musicList[nextIdx];
-            document.getElementById('upNextInfo').innerText = `Up Next: ${nextSong.title}`;
+            if(nextSong) document.getElementById('upNextInfo').innerText = `Up Next: ${nextSong.title}`;
         }
 
         window.playNext = () => {
-            if (isShuffle) {
-                currentIdx = Math.floor(Math.random() * musicList.length);
-            } else {
-                currentIdx = (currentIdx + 1) % musicList.length;
-            }
+            if (musicList.length === 0) return;
+            currentIdx = isShuffle ? Math.floor(Math.random() * musicList.length) : (currentIdx + 1) % musicList.length;
             window.playNow(musicList[currentIdx].id);
         };
 
         window.playPrev = () => {
+            if (musicList.length === 0) return;
             currentIdx = (currentIdx - 1 + musicList.length) % musicList.length;
             window.playNow(musicList[currentIdx].id);
         };
 
-        audio.onended = () => {
-            if (isRepeat) { audio.currentTime = 0; audio.play(); }
-            else { window.playNext(); }
-        };
+        audio.onended = () => isRepeat ? audio.play() : window.playNext();
 
         document.getElementById('btnShuffle').onclick = function() {
             isShuffle = !isShuffle;
             this.style.color = isShuffle ? 'var(--accent)' : '#ccc';
-            updateUpNext();
         };
 
         document.getElementById('btnRepeat').onclick = function() {
@@ -359,24 +359,16 @@
             this.style.color = isRepeat ? 'var(--accent)' : '#ccc';
         };
 
-        // Direct Download Fix
         window.downloadFile = async (url, filename) => {
-            Swal.fire({ title: 'Preparing File...', didOpen: () => Swal.showLoading() });
-            try {
-                const res = await fetch(url);
-                const blob = await res.blob();
-                const bUrl = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = bUrl;
-                a.download = `${filename}.mp3`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                Swal.close();
-            } catch (e) { window.open(url, '_blank'); Swal.close(); }
+            const res = await fetch(url);
+            const blob = await res.blob();
+            const bUrl = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = bUrl; a.download = `${filename}.mp3`;
+            a.click();
         };
 
-        // Form Submission
+        // --- INSTANT UPLOAD SINKRON ---
         document.getElementById('uploadForm').onsubmit = async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btnUpload');
@@ -387,7 +379,7 @@
             const manualThumb = document.getElementById('manualThumb').value;
 
             btn.disabled = true;
-            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> UPLOADING...`;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin"></i> SAVING...`;
 
             try {
                 let thumbUrl = manualThumb || 'https://via.placeholder.com/500?text=Nell+Music';
@@ -408,16 +400,19 @@
                     const path = await pRes.json();
                     const cdn = `https://api.telegram.org/file/bot${TG_TOKEN}/${path.result.file_path}`;
 
-                    if(editId) await update(ref(database, `songs/${editId}`), { title, artist, url: cdn, cover: thumbUrl });
-                    else await push(musicRef, { title, artist, url: cdn, cover: thumbUrl, createdAt: serverTimestamp() });
+                    const newSongData = { title, artist, url: cdn, cover: thumbUrl, createdAt: serverTimestamp() };
+                    
+                    if(editId) await update(ref(database, `songs/${editId}`), newSongData);
+                    else await push(musicRef, newSongData);
                 }
+                
                 window.toggleAdmin();
-                Swal.fire('Success!', 'Library Updated.', 'success');
-            } catch (err) { Swal.fire('Error', 'Failed to upload.', 'error'); }
+                Swal.fire({ title: 'Tersimpan!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 2000 });
+            } catch (err) { Swal.fire('Error', 'Gagal upload', 'error'); }
             finally { btn.disabled = false; btn.innerText = "SAVE TO CLOUD"; }
         };
 
-        // Audio UI Controls
+        // UI Listeners
         document.getElementById('btnPlayPause').onclick = () => {
             if(audio.paused) { audio.play(); document.getElementById('btnPlayPause').innerHTML = '<i class="fas fa-pause"></i>'; }
             else { audio.pause(); document.getElementById('btnPlayPause').innerHTML = '<i class="fas fa-play"></i>'; }
@@ -427,13 +422,7 @@
             audio.currentTime = ((e.clientX - rect.left) / rect.width) * audio.duration;
         };
         audio.ontimeupdate = () => { document.getElementById('pFill').style.width = (audio.currentTime / audio.duration * 100) + "%"; };
-        
-        document.getElementById('searchInput').oninput = function() {
-            const val = this.value.toLowerCase();
-            document.querySelectorAll('.card').forEach(c => {
-                c.style.display = c.innerText.toLowerCase().includes(val) ? 'block' : 'none';
-            });
-        };
+        document.getElementById('searchInput').oninput = () => renderMusic(musicList);
         document.getElementById('songFile').onchange = function() {
             if(this.files[0]) document.getElementById('fileLabel').innerText = "AUDIO SELECTED!";
         };
