@@ -1,408 +1,921 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" class="light">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Nell Music Studio - Pro Dashboard</title>
+    <title>Aura Music | Cinematic Streaming</title>
+    <meta name="theme-color" content="#ffffff">
+    <meta name="description" content="Premium music streaming experience powered by Audius.">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        glass: 'rgba(255, 255, 255, 0.4)',
+                        glassDark: 'rgba(10, 10, 15, 0.6)',
+                        brand: '#7c3aed', // Violet 600
+                    },
+                    animation: {
+                        'spin-slow': 'spin 8s linear infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <!-- Swiper CSS -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
 
     <style>
-        :root {
-            --accent: #ff2d55;
-            --glass: rgba(255, 255, 255, 0.12);
-            --blur: blur(35px) saturate(200%);
-            --border: 0.5px solid rgba(255, 255, 255, 0.3);
+        /* Custom Styles & Glassmorphism Utilities */
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            background-color: #f8fafc;
+            color: #0f172a;
+            transition: background-color 0.5s ease, color 0.5s ease;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        .dark body {
+            background-color: #020617;
+            color: #f8fafc;
+        }
+
+        /* Dynamic Background Blur */
+        #dynamic-bg {
+            position: fixed;
+            top: -10%; left: -10%; width: 120%; height: 120%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(100px) saturate(150%) brightness(0.9);
+            opacity: 0.3;
+            z-index: -2;
+            transition: background-image 1.5s ease-in-out, opacity 1s;
+        }
         
-        body { 
-            background: linear-gradient(135deg, #f2f2f7 0%, #ffffff 100%);
-            background-attachment: fixed;
-            color: #1c1c1e; 
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif; 
-            padding-bottom: 220px; 
-            min-height: 100vh;
+        .dark #dynamic-bg {
+            opacity: 0.2;
+            filter: blur(120px) saturate(200%) brightness(0.5);
         }
 
-        .container { padding: 15px; max-width: 850px; margin: 0 auto; }
-
-        /* Dashboard Stats */
-        .dash-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 15px 0; }
-        .dash-item { 
-            background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border: var(--border); padding: 12px 8px; border-radius: 20px; text-align: center;
+        /* Three.js Canvas Container */
+        #visualizer-container {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -1;
+            pointer-events: none;
+            opacity: 0.6;
+            mix-blend-mode: screen;
         }
-        .dash-item span { display: block; font-size: 16px; font-weight: 800; }
-        .dash-item label { font-size: 9px; opacity: 0.5; font-weight: 700; text-transform: uppercase; }
+        .dark #visualizer-container { mix-blend-mode: screen; opacity: 0.8; }
 
-        /* Pages */
-        .section-page { display: none; transition: 0.3s; }
-        .section-page.active { display: block; animation: fadeIn 0.4s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .swiper { border-radius: 28px; width: 100%; aspect-ratio: 16 / 9; margin-bottom: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
-        .swiper-slide img { width: 100%; height: 100%; object-fit: cover; }
-
-        .search-box { 
-            background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border: var(--border); padding: 12px 16px; border-radius: 18px; display: flex; align-items: center; gap: 10px; margin-bottom: 15px; 
+        /* Glass Panels */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.5);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
         }
-        .search-box input { border: none; outline: none; background: transparent; width: 100%; font-size: 16px; }
+        .dark .glass-panel {
+            background: rgba(15, 23, 42, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+        }
 
-        /* Grid Music */
-        .grid-music { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .card { padding: 8px; border-radius: 24px; position: relative; background: var(--glass); border: var(--border); backdrop-filter: var(--blur); }
-        .thumb-box { width: 100%; aspect-ratio: 1/1; border-radius: 18px; overflow: hidden; margin-bottom: 8px; cursor: pointer; }
-        .thumb-box img { width: 100%; height: 100%; object-fit: cover; }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.3); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(124, 58, 237, 0.6); }
+
+        /* Range Slider Styling (Progress Bar) */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+            height: 4px;
+            border-radius: 2px;
+            cursor: pointer;
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%; height: 4px; background: rgba(124, 58, 237, 0.2); border-radius: 2px;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 12px; width: 12px;
+            border-radius: 50%;
+            background: #7c3aed;
+            margin-top: -4px;
+            box-shadow: 0 0 10px rgba(124, 58, 237, 0.8);
+            transition: transform 0.1s;
+        }
+        input[type=range]:active::-webkit-slider-thumb { transform: scale(1.3); }
+
+        /* Utilities */
+        .text-gradient {
+            background: linear-gradient(135deg, #7c3aed, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .hover-card-img img { transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-card-img:hover img { transform: scale(1.1); }
+        .play-overlay { transition: opacity 0.3s ease; }
+        .hover-card-img:hover .play-overlay { opacity: 1; }
         
-        .like-btn { position: absolute; top: 12px; right: 12px; color: white; font-size: 18px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); z-index: 5; }
-        .like-btn.active { color: var(--accent); }
-        .btn-action { flex: 1; border: none; background: rgba(0,0,0,0.05); padding: 8px; border-radius: 12px; cursor: pointer; }
-
-        /* Player & Nav */
-        .player-wrapper { 
-            position: fixed; bottom: 100px; left: 15px; right: 15px; border-radius: 24px; padding: 12px 18px; 
-            background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border: var(--border); z-index: 1000; display: none; box-shadow: 0 15px 35px rgba(0,0,0,0.1);
-        }
-        .bottom-nav { 
-            position: fixed; bottom: 0; left: 0; right: 0; display: flex; justify-content: space-around; 
-            padding: 12px 0 35px; background: var(--glass); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            border-top: var(--border); z-index: 1001; 
-        }
-        .nav-item { text-align: center; color: rgba(0,0,0,0.3); font-size: 10px; font-weight: 700; cursor: pointer; }
-        .nav-item.active { color: var(--accent); }
-        .nav-item i { font-size: 20px; display: block; margin-bottom: 4px; }
-
-        /* ULTRA TRANSPARENT MODAL */
-        .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.3); display: none; z-index: 2000; align-items: flex-end; }
-        .modal-content { 
-            width: 100%; padding: 25px; border-radius: 30px 30px 0 0; 
-            background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(45px) saturate(200%);
-            -webkit-backdrop-filter: blur(45px) saturate(200%); border: var(--border); max-height: 85vh; overflow-y: auto; 
-        }
-        .modal-content input { width: 100%; padding: 14px; background: rgba(255,255,255,0.2); border: var(--border); border-radius: 12px; margin-bottom: 10px; outline: none; }
-
-        /* PRETTIER IOS PASSWORD PROMPT */
-        .ios-alert-container .swal2-popup {
-            background: rgba(255, 255, 255, 0.25) !important; backdrop-filter: blur(40px) saturate(210%) !important;
-            -webkit-backdrop-filter: blur(40px) saturate(210%) !important; border-radius: 22px !important; width: 300px !important; 
-            padding: 20px 0 0 0 !important; border: var(--border) !important;
-        }
-        .ios-alert-container .swal2-input { background: rgba(255, 255, 255, 0.4) !important; border-radius: 12px !important; width: 85% !important; text-align: center !important; }
-        .ios-alert-container .swal2-actions { border-top: 0.5px solid rgba(0, 0, 0, 0.1) !important; width: 100% !important; margin-top: 15px !important; }
-        .ios-alert-container .swal2-confirm { color: #007aff !important; background: transparent !important; font-weight: 600 !important; flex: 1; height: 50px; }
-        .ios-alert-container .swal2-cancel { color: #ff3b30 !important; background: transparent !important; flex: 1; border-right: 0.5px solid rgba(0, 0, 0, 0.1) !important; height: 50px; }
+        /* Swiper Custom */
+        .swiper-pagination-bullet-active { background: #7c3aed !important; }
+        
+        /* Hide scrollbar for layout */
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
     </style>
 </head>
-<body>
+<body class="antialiased selection:bg-brand selection:text-white">
 
-    <div class="container">
-        <header style="display: flex; justify-content: space-between; align-items: center; padding: 15px 5px;">
-            <div>
-                <p style="font-size: 11px; font-weight: 800; opacity: 0.5;">FIBERGLASS V4.0</p>
-                <h1 style="font-size: 26px; font-weight: 900; letter-spacing: -1px;">Nell<span style="color:var(--accent)">Studio</span></h1>
-            </div>
-            <div onclick="window.checkPass('studio')" style="width:40px; height:40px; border-radius:50%; background:var(--glass); display:grid; place-items:center; border:var(--border); backdrop-filter: var(--blur);">
-                <i class="fas fa-plus"></i>
-            </div>
-        </header>
+    <!-- Dynamic Backgrounds -->
+    <div id="dynamic-bg"></div>
+    <div id="visualizer-container"></div>
 
-        <div class="dash-grid">
-            <div class="dash-item"><span id="statSongs">0</span><label>Songs</label></div>
-            <div class="dash-item"><span id="statArtist">0</span><label>Artists</label></div>
-            <div class="dash-item"><span id="statPlays">0</span><label>Plays</label></div>
-        </div>
-
-        <div class="search-box">
-            <i class="fas fa-search" style="color:rgba(0,0,0,0.2)"></i>
-            <input type="text" id="searchInput" placeholder="Cari musik favoritmu...">
-        </div>
-
-        <div id="homePage" class="section-page active">
-            <div class="swiper" id="mainSwiper"><div class="swiper-wrapper" id="bannerWrapper"></div></div>
-            <h3 style="margin-bottom: 15px; font-weight: 900;">Trending Now</h3>
-            <div class="grid-music" id="musicGridHome"></div>
-        </div>
-
-        <div id="explorePage" class="section-page">
-            <h3 style="margin-bottom: 15px; font-weight: 900;">Discover All</h3>
-            <div class="grid-music" id="musicGridExplore"></div>
-        </div>
-
-        <div id="likedPage" class="section-page">
-            <h3 style="margin-bottom: 15px; font-weight: 900;">Your Favorites</h3>
-            <div class="grid-music" id="musicGridLiked"></div>
-        </div>
-    </div>
-
-    <div class="player-wrapper" id="miniPlayer">
-        <div id="pSeek" style="width: 100%; height: 3px; background: rgba(0,0,0,0.05); position: absolute; top: 0; left: 0; cursor: pointer;">
-            <div id="pFill" style="height: 100%; background: var(--accent); width: 0%;"></div>
-        </div>
-        <div style="display: flex; align-items: center; gap: 12px;">
-            <img src="" id="pCover" style="width: 48px; height: 48px; border-radius: 12px; object-fit: cover;">
-            <div style="flex: 1; min-width: 0;">
-                <div id="pTitle" style="font-size: 14px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">-</div>
-                <p id="pArtist" style="font-size: 11px; opacity: 0.5;"></p>
-            </div>
-            <div style="display:flex; gap:12px; align-items:center;">
-                <i class="fas fa-step-backward" onclick="window.prevSong()" style="opacity:0.5;"></i>
-                <div id="btnPlayPause" style="width: 42px; height: 42px; border-radius: 50%; background: var(--accent); color: white; display: grid; place-items: center;">
-                    <i class="fas fa-play"></i>
-                </div>
-                <i class="fas fa-step-forward" onclick="window.nextSong()" style="opacity:0.5;"></i>
-            </div>
-        </div>
-    </div>
-
-    <nav class="bottom-nav">
-        <div class="nav-item active" onclick="window.changePage('home', this)"><i class="fas fa-home"></i>Home</div>
-        <div class="nav-item" onclick="window.changePage('explore', this)"><i class="fas fa-compass"></i>Explore</div>
-        <div class="nav-item" onclick="window.changePage('liked', this)"><i class="fas fa-heart"></i>Liked</div>
-    </nav>
-
-    <div id="adminModal" class="modal">
-        <div class="modal-content">
-            <h3 id="adminTitle" style="margin-bottom:15px; font-weight:900;">Studio Sync</h3>
-            <form id="uploadForm">
-                <input type="text" id="songTitle" placeholder="Judul Lagu" required>
-                <input type="text" id="songArtist" placeholder="Nama Artis" required>
-                <input type="text" id="ytLink" placeholder="YouTube Link (Cover)">
-                <input type="file" id="songFile" style="display:none;">
-                <label for="songFile" id="fileLabel" style="display:block; padding:15px; border:1px solid var(--accent); border-radius:12px; text-align:center; color: var(--accent); font-weight: 800; margin-bottom: 15px; background: rgba(255,45,85,0.05);">PILIH AUDIO (.mp3)</label>
-                <button type="submit" id="btnUpload" style="width:100%; padding:16px; background:var(--accent); color:white; border:none; border-radius:12px; font-weight:900;">UPLOAD KE DATABASE</button>
-                <button type="button" onclick="window.toggleAdmin()" style="width:100%; margin-top:12px; background:none; border:none; opacity:0.6;">Batal</button>
-            </form>
-        </div>
-    </div>
-
-    <audio id="mainAudio"></audio>
-
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-        import { getDatabase, ref, push, onValue, remove, update, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-
-        const firebaseConfig = {
-            apiKey: "AIzaSyDQbPGVmUN95ALjvKrPAeND_Vi09r9lPcs",
-            authDomain: "webb-online.firebaseapp.com",
-            databaseURL: "https://webb-online-default-rtdb.asia-southeast1.firebasedatabase.app",
-            projectId: "webb-online",
-            storageBucket: "webb-online.firebasestorage.app",
-            messagingSenderId: "639981237091",
-            appId: "1:639981237091:web:0b1fcb20b44848e9cdd956"
-        };
-
-        const app = initializeApp(firebaseConfig);
-        const database = getDatabase(app);
-        const musicRef = ref(database, 'songs');
-        const audio = document.getElementById('mainAudio');
+    <!-- Main Layout -->
+    <div class="flex h-screen w-full overflow-hidden">
         
-        window.allMusic = [];
-        let currentSongId = null;
-        let swiperInstance = null;
-        let editId = null;
+        <!-- Sidebar (Desktop) / Bottom Nav (Mobile - CSS hides on small screens) -->
+        <aside class="w-20 lg:w-64 glass-panel border-r border-t-0 border-l-0 border-b-0 hidden md:flex flex-col justify-between py-8 px-4 z-40">
+            <div>
+                <div class="flex items-center justify-center lg:justify-start gap-3 px-2 mb-10 cursor-pointer anime-hover">
+                    <i class="ph-fill ph-waves text-brand text-4xl animate-pulse"></i>
+                    <h1 class="text-2xl font-bold tracking-tighter hidden lg:block text-gradient">Aura</h1>
+                </div>
 
-        onValue(musicRef, (snapshot) => {
-            const data = snapshot.val();
-            window.allMusic = [];
-            if (data) Object.keys(data).forEach(k => window.allMusic.push({id:k, ...data[k]}));
-            updateStats();
-            renderPages();
-        });
+                <nav class="space-y-4">
+                    <button class="nav-btn w-full flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-2xl bg-brand/10 text-brand font-semibold transition-all">
+                        <i class="ph ph-house text-2xl"></i>
+                        <span class="hidden lg:block">Home</span>
+                    </button>
+                    <button class="nav-btn w-full flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-2xl hover:bg-gray-500/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                        <i class="ph ph-magnifying-glass text-2xl"></i>
+                        <span class="hidden lg:block">Search</span>
+                    </button>
+                    <button class="nav-btn w-full flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-2xl hover:bg-gray-500/10 text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-all">
+                        <i class="ph ph-books text-2xl"></i>
+                        <span class="hidden lg:block">Library</span>
+                    </button>
+                </nav>
+            </div>
 
-        function updateStats() {
-            document.getElementById('statSongs').innerText = window.allMusic.length;
-            document.getElementById('statArtist').innerText = [...new Set(window.allMusic.map(m => m.artist))].length;
-            document.getElementById('statPlays').innerText = window.allMusic.reduce((a, b) => a + (b.plays || 0), 0);
-            renderBanner(window.allMusic);
-        }
+            <div class="space-y-4">
+                <button id="theme-toggle" class="w-full flex items-center justify-center lg:justify-start gap-4 px-4 py-3 rounded-2xl hover:bg-gray-500/10 text-gray-500 transition-all anime-hover">
+                    <i class="ph ph-moon text-2xl dark:hidden"></i>
+                    <i class="ph ph-sun text-2xl hidden dark:block"></i>
+                    <span class="hidden lg:block dark:hidden">Dark Mode</span>
+                    <span class="hidden lg:block hidden dark:block">Light Mode</span>
+                </button>
+            </div>
+        </aside>
 
-        function renderPages() {
-            const search = document.getElementById('searchInput').value.toLowerCase();
-            const likedIds = JSON.parse(localStorage.getItem('nell_liked') || '[]');
-            let filtered = window.allMusic.filter(m => (m.title||'').toLowerCase().includes(search) || (m.artist||'').toLowerCase().includes(search));
-
-            renderGrid(filtered.slice(0, 10), 'musicGridHome');
-            renderGrid(filtered, 'musicGridExplore');
-            renderGrid(filtered.filter(m => likedIds.includes(m.id)), 'musicGridLiked');
-        }
-
-        function renderGrid(data, targetId) {
-            const grid = document.getElementById(targetId);
-            if(!grid) return;
-            const likedIds = JSON.parse(localStorage.getItem('nell_liked') || '[]');
-            grid.innerHTML = data.map(item => `
-                <div class="card">
-                    <i class="fa${likedIds.includes(item.id)?'s':'r'} fa-heart like-btn ${likedIds.includes(item.id)?'active':''}" onclick="window.toggleLike('${item.id}')"></i>
-                    <div class="thumb-box" onclick="window.playNow('${item.id}')">
-                        <img src="${item.cover || 'https://via.placeholder.com/300'}" loading="lazy">
+        <!-- Main Content Area -->
+        <main class="flex-1 h-full overflow-y-auto overflow-x-hidden relative z-20 pb-32 no-scrollbar" id="main-scroll">
+            
+            <!-- Top Header -->
+            <header class="sticky top-0 w-full p-6 flex justify-between items-center z-30 glass-panel border-x-0 border-t-0">
+                <div class="relative w-full max-w-md">
+                    <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+                    <input type="text" id="search-input" placeholder="Search tracks, artists..." 
+                        class="w-full bg-black/5 dark:bg-white/5 border border-gray-200 dark:border-gray-800 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:ring-2 focus:ring-brand backdrop-blur-md transition-all text-sm font-medium placeholder-gray-400">
+                </div>
+                <div class="flex items-center gap-4 ml-4">
+                    <button class="w-10 h-10 rounded-full bg-brand/10 flex items-center justify-center text-brand anime-hover">
+                        <i class="ph ph-bell text-xl"></i>
+                    </button>
+                    <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-brand to-pink-500 p-[2px] cursor-pointer anime-hover">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Aura" alt="User" class="w-full h-full rounded-full bg-white dark:bg-black">
                     </div>
-                    <div style="padding:0 4px;">
-                        <h4 style="font-size:12px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${item.title}</h4>
-                        <p style="font-size:10px; opacity:0.5; margin-bottom:10px;">${item.artist}</p>
-                        <div style="display:flex; gap:5px;">
-                            <button onclick="window.downloadFile('${item.url}', '${item.title}')" class="btn-action"><i class="fas fa-download"></i></button>
-                            <button onclick="window.checkPass('edit', '${item.id}')" class="btn-action"><i class="fas fa-edit"></i></button>
-                            <button onclick="window.checkPass('delete', '${item.id}')" class="btn-action"><i class="fas fa-trash"></i></button>
+                </div>
+            </header>
+
+            <!-- Search Results (Hidden by default) -->
+            <div id="search-view" class="p-6 hidden">
+                <h2 class="text-2xl font-bold mb-6 flex items-center gap-2"><i class="ph-fill ph-sparkle text-brand"></i> Search Results</h2>
+                <div id="search-grid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                    <!-- Search items injected here -->
+                </div>
+                <div id="search-loading" class="hidden text-center py-10 text-gray-500">
+                    <i class="ph ph-spinner-gap animate-spin text-4xl text-brand mx-auto mb-2"></i>
+                    <p>Searching universe...</p>
+                </div>
+            </div>
+
+            <!-- Home View -->
+            <div id="home-view" class="p-6 space-y-10">
+                
+                <!-- Hero Banner Slider -->
+                <section>
+                    <div class="swiper bannerSwiper rounded-3xl overflow-hidden shadow-2xl relative group">
+                        <div class="swiper-wrapper" id="banner-wrapper">
+                            <!-- Banners injected here via JS -->
+                            <div class="swiper-slide h-64 md:h-80 bg-gray-200 dark:bg-gray-800 animate-pulse rounded-3xl"></div>
+                        </div>
+                        <div class="swiper-pagination"></div>
+                        <div class="swiper-button-next !text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg scale-75"></div>
+                        <div class="swiper-button-prev !text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg scale-75"></div>
+                    </div>
+                </section>
+
+                <!-- Trending Tracks -->
+                <section class="gsap-section">
+                    <div class="flex justify-between items-end mb-6">
+                        <h2 class="text-2xl font-bold flex items-center gap-2">
+                            <i class="ph-fill ph-fire text-orange-500"></i> Trending on Audius
+                        </h2>
+                        <button class="text-brand text-sm font-semibold hover:underline">View All</button>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6" id="trending-grid">
+                        <!-- Skeleton Loaders -->
+                        <div class="animate-pulse flex flex-col gap-3">
+                            <div class="w-full aspect-square bg-gray-300 dark:bg-gray-800 rounded-2xl"></div>
+                            <div class="h-4 bg-gray-300 dark:bg-gray-800 rounded w-3/4"></div>
+                            <div class="h-3 bg-gray-300 dark:bg-gray-800 rounded w-1/2"></div>
+                        </div>
+                        <div class="animate-pulse flex flex-col gap-3 hidden sm:flex">
+                            <div class="w-full aspect-square bg-gray-300 dark:bg-gray-800 rounded-2xl"></div>
+                            <div class="h-4 bg-gray-300 dark:bg-gray-800 rounded w-3/4"></div>
+                            <div class="h-3 bg-gray-300 dark:bg-gray-800 rounded w-1/2"></div>
                         </div>
                     </div>
+                </section>
+
+                <!-- Curated Picks (Mocked for UI) -->
+                <section class="gsap-section pb-10">
+                    <h2 class="text-2xl font-bold mb-6 flex items-center gap-2">
+                        <i class="ph-fill ph-headphones text-brand"></i> Curated for You
+                    </h2>
+                    <div class="swiper playlistSwiper">
+                        <div class="swiper-wrapper" id="curated-wrapper">
+                            <!-- Curated playlists injected here -->
+                        </div>
+                    </div>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Nav (Visible only on small screens) -->
+    <nav class="md:hidden fixed bottom-24 left-4 right-4 z-40 glass-panel rounded-full flex justify-between items-center px-6 py-3 border border-white/20 shadow-xl">
+        <button class="text-brand flex flex-col items-center gap-1">
+            <i class="ph-fill ph-house text-2xl"></i>
+        </button>
+        <button class="text-gray-400 hover:text-gray-900 dark:hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i class="ph ph-magnifying-glass text-2xl"></i>
+        </button>
+        <button class="text-gray-400 hover:text-gray-900 dark:hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i class="ph ph-books text-2xl"></i>
+        </button>
+        <button id="mobile-theme-toggle" class="text-gray-400 hover:text-gray-900 dark:hover:text-white flex flex-col items-center gap-1 transition-colors">
+            <i class="ph ph-moon text-2xl dark:hidden"></i>
+            <i class="ph ph-sun text-2xl hidden dark:block"></i>
+        </button>
+    </nav>
+
+    <!-- Sticky Music Player -->
+    <div class="fixed bottom-0 left-0 w-full z-50 transform translate-y-0 transition-transform duration-500" id="player-container">
+        <!-- Progress Bar (Top edge of player) -->
+        <div class="absolute top-0 left-0 w-full h-1 bg-gray-200 dark:bg-gray-800 group cursor-pointer" id="progress-container">
+            <div class="h-full bg-brand w-0 relative shadow-[0_0_10px_rgba(124,58,237,0.8)]" id="progress-bar">
+                <div class="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 bg-white rounded-full scale-0 group-hover:scale-100 transition-transform shadow-md"></div>
+            </div>
+        </div>
+
+        <div class="glass-panel border-t border-x-0 border-b-0 px-4 md:px-8 py-3 flex items-center justify-between gap-4 h-24 shadow-[0_-10px_40px_rgba(0,0,0,0.1)]">
+            
+            <!-- Track Info -->
+            <div class="flex items-center gap-4 w-1/3 min-w-[150px]">
+                <div class="relative w-14 h-14 md:w-16 md:h-16 rounded-xl overflow-hidden shadow-lg group cursor-pointer">
+                    <img id="player-cover" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100'><rect width='100' height='100' fill='%23ccc'/></svg>" alt="Cover" class="w-full h-full object-cover">
+                    <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                        <i class="ph ph-caret-up text-white text-xl"></i>
+                    </div>
                 </div>
-            `).join('');
-        }
-
-        function renderBanner(data) {
-            const top = [...data].sort((a,b) => (b.plays||0) - (a.plays||0)).slice(0,5);
-            document.getElementById('bannerWrapper').innerHTML = top.map(i => `
-                <div class="swiper-slide" onclick="window.playNow('${i.id}')">
-                    <img src="${i.cover.replace('mqdefault', 'maxresdefault')}">
+                <div class="hidden sm:block overflow-hidden">
+                    <h4 id="player-title" class="font-bold text-sm md:text-base truncate">Select a track</h4>
+                    <p id="player-artist" class="text-xs md:text-sm text-gray-500 dark:text-gray-400 truncate">from the cosmos</p>
                 </div>
-            `).join('');
-            if(swiperInstance) swiperInstance.destroy();
-            swiperInstance = new Swiper('#mainSwiper', { autoplay: { delay: 4000 }, loop: true, speed: 800 });
-        }
+                <button class="hidden md:block text-gray-400 hover:text-pink-500 transition-colors anime-hover ml-2">
+                    <i class="ph ph-heart text-xl"></i>
+                </button>
+            </div>
 
-        window.playNow = (id) => {
-            const song = window.allMusic.find(s => s.id === id);
-            if(!song) return;
-            currentSongId = id;
-            audio.src = song.url; audio.play();
-            update(ref(database, `songs/${id}`), { plays: (song.plays || 0) + 1 });
-            document.getElementById('miniPlayer').style.display = 'block';
-            document.getElementById('pTitle').innerText = song.title;
-            document.getElementById('pArtist').innerText = song.artist;
-            document.getElementById('pCover').src = song.cover;
-            document.getElementById('btnPlayPause').innerHTML = '<i class="fas fa-pause"></i>';
-        };
-
-        // AUTO-NEXT
-        audio.onended = () => window.nextSong();
-
-        window.nextSong = () => {
-            const idx = window.allMusic.findIndex(s => s.id === currentSongId);
-            const nextIdx = (idx + 1) % window.allMusic.length;
-            window.playNow(window.allMusic[nextIdx].id);
-        };
-
-        window.prevSong = () => {
-            const idx = window.allMusic.findIndex(s => s.id === currentSongId);
-            const prevIdx = (idx - 1 + window.allMusic.length) % window.allMusic.length;
-            window.playNow(window.allMusic[prevIdx].id);
-        };
-
-        window.toggleLike = (id) => {
-            let liked = JSON.parse(localStorage.getItem('nell_liked') || '[]');
-            liked = liked.includes(id) ? liked.filter(i => i !== id) : [...liked, id];
-            localStorage.setItem('nell_liked', JSON.stringify(liked));
-            renderPages();
-        };
-
-        window.downloadFile = async (url, title) => {
-            Swal.fire({title:'Downloading...', didOpen:()=>Swal.showLoading(), customClass:{container:'ios-alert-container'}});
-            try { 
-                const res = await fetch(url); const b = await res.blob(); 
-                const a = document.createElement('a'); a.href = URL.createObjectURL(b); a.download = title+".mp3"; a.click(); 
-            } catch(e) { window.open(url, '_blank'); }
-            Swal.close();
-        };
-
-        // NEW PRETTY IOS PASSWORD PROMPT
-        window.checkPass = async (action, id = null) => {
-            const { value: pass } = await Swal.fire({
-                title: 'Akses Terbatas',
-                html: 'Masukkan Password Studio untuk melanjutkan.',
-                input: 'password',
-                inputPlaceholder: '••••••••',
-                showCancelButton: true,
-                confirmButtonText: 'Buka',
-                cancelButtonText: 'Batal',
-                reverseButtons: true,
-                customClass: { 
-                    container: 'ios-alert-container',
-                    popup: 'swal2-popup',
-                    input: 'swal2-input',
-                    confirmButton: 'swal2-confirm',
-                    cancelButton: 'swal2-cancel'
-                },
-                buttonsStyling: false
-            });
-
-            if(pass === "123") {
-                if(action === 'studio') { editId = null; window.toggleAdmin(); }
-                if(action === 'delete') remove(ref(database, `songs/${id}`));
-                if(action === 'edit') {
-                    const s = window.allMusic.find(m => m.id === id); editId = id;
-                    document.getElementById('songTitle').value = s.title;
-                    document.getElementById('songArtist').value = s.artist;
-                    document.getElementById('adminTitle').innerText = "Update Content";
-                    window.toggleAdmin();
-                }
-            } else if (pass !== undefined) {
-                Swal.fire({ icon: 'error', title: 'Salah!', showConfirmButton: false, timer: 1000, customClass: { container: 'ios-alert-container' } });
-            }
-        };
-
-        window.changePage = (id, el) => {
-            document.querySelectorAll('.section-page').forEach(p => p.classList.remove('active'));
-            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-            document.getElementById(id + 'Page').classList.add('active');
-            el.classList.add('active');
-        };
-
-        window.toggleAdmin = () => {
-            const m = document.getElementById('adminModal');
-            m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
-            if(m.style.display === 'none') {
-                document.getElementById('uploadForm').reset();
-                document.getElementById('adminTitle').innerText = "Studio Sync";
-            }
-        };
-
-        document.getElementById('uploadForm').onsubmit = async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btnUpload');
-            const file = document.getElementById('songFile').files[0];
-            const yt = document.getElementById('ytLink').value;
-            btn.disabled = true; btn.innerText = "Syncing...";
-
-            let thumb = 'https://via.placeholder.com/500';
-            if(yt) {
-                const vidId = yt.match(/(?:v=|\/)([0-9A-Za-z_-]{11})/)?.[1];
-                if(vidId) thumb = `https://img.youtube.com/vi/${vidId}/mqdefault.jpg`;
-            }
-
-            try {
-                if(editId && !file) {
-                    await update(ref(database, `songs/${editId}`), { title: document.getElementById('songTitle').value, artist: document.getElementById('songArtist').value, cover: thumb });
-                } else {
-                    const fd = new FormData(); fd.append('chat_id', '@asuakaba'); fd.append('video', file);
-                    const res = await fetch(`https://api.telegram.org/bot8625201664:AAGeG3ZtnvcyrPLpWCKhkSDcx6hS7rcL3ig/sendVideo`, {method:'POST', body:fd});
-                    const tg = await res.json();
-                    const pRes = await fetch(`https://api.telegram.org/bot8625201664:AAGeG3ZtnvcyrPLpWCKhkSDcx6hS7rcL3ig/getFile?file_id=${tg.result.video.file_id}`);
-                    const path = await pRes.json();
-                    const cdn = `https://api.telegram.org/file/bot8625201664:AAGeG3ZtnvcyrPLpWCKhkSDcx6hS7rcL3ig/${path.result.file_path}`;
+            <!-- Controls -->
+            <div class="flex flex-col items-center justify-center w-auto md:w-1/3">
+                <div class="flex items-center gap-4 md:gap-6">
+                    <button id="btn-shuffle" class="text-gray-400 hover:text-brand transition-colors anime-hover hidden sm:block">
+                        <i class="ph ph-shuffle text-xl"></i>
+                    </button>
+                    <button id="btn-prev" class="text-gray-700 dark:text-gray-200 hover:text-brand transition-colors anime-hover">
+                        <i class="ph-fill ph-skip-back text-2xl md:text-3xl"></i>
+                    </button>
                     
-                    if(editId) await update(ref(database, `songs/${editId}`), { title:document.getElementById('songTitle').value, artist:document.getElementById('songArtist').value, url:cdn, cover:thumb });
-                    else await push(musicRef, { title:document.getElementById('songTitle').value, artist:document.getElementById('songArtist').value, url:cdn, cover:thumb, plays:0, createdAt:serverTimestamp() });
-                }
-                window.toggleAdmin();
-                Swal.fire({title:'Success', icon:'success', customClass:{container:'ios-alert-container'}});
-            } catch(e) { alert("Sync Error!"); }
-            btn.disabled = false; btn.innerText = "UPLOAD KE DATABASE";
+                    <button id="btn-play" class="w-12 h-12 md:w-14 md:h-14 rounded-full bg-brand text-white flex items-center justify-center shadow-[0_0_20px_rgba(124,58,237,0.5)] hover:scale-105 transition-transform">
+                        <i id="play-icon" class="ph-fill ph-play text-2xl ml-1"></i>
+                    </button>
+                    
+                    <button id="btn-next" class="text-gray-700 dark:text-gray-200 hover:text-brand transition-colors anime-hover">
+                        <i class="ph-fill ph-skip-forward text-2xl md:text-3xl"></i>
+                    </button>
+                    <button id="btn-repeat" class="text-gray-400 hover:text-brand transition-colors anime-hover hidden sm:block">
+                        <i class="ph ph-repeat text-xl"></i>
+                    </button>
+                </div>
+                <div class="w-full max-w-md hidden md:flex items-center gap-2 mt-2 text-xs text-gray-500 font-mono">
+                    <span id="time-current">0:00</span>
+                    <div class="flex-1 relative h-1 bg-gray-300 dark:bg-gray-700 rounded-full overflow-hidden">
+                        <div id="progress-bar-mini" class="absolute top-0 left-0 h-full bg-brand w-0"></div>
+                    </div>
+                    <span id="time-total">0:00</span>
+                </div>
+            </div>
+
+            <!-- Extra Controls -->
+            <div class="flex items-center justify-end gap-4 w-1/3">
+                <i class="ph ph-speaker-high text-gray-500 hidden lg:block"></i>
+                <input type="range" id="volume-slider" min="0" max="100" value="80" class="w-24 hidden lg:block">
+                
+                <button id="btn-visualizer" class="text-gray-500 hover:text-brand transition-colors anime-hover relative group">
+                    <i class="ph ph-magic-wand text-2xl"></i>
+                    <span class="absolute -top-8 left-1/2 -translate-x-1/2 bg-black text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none">Toggle 3D Viz</span>
+                </button>
+                
+                <button id="btn-queue" class="text-gray-500 hover:text-brand transition-colors anime-hover">
+                    <i class="ph ph-list-dashes text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/howler/2.2.4/howler.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/lazysizes/5.3.2/lazysizes.min.js" async=""></script>
+
+    <script>
+        /**
+         * AURA MUSIC - Core Application Logic
+         * Architecture: 
+         * 1. App State
+         * 2. Audius API Service
+         * 3. Audio Player (Howler)
+         * 4. UI Rendering & DOM manipulation
+         * 5. Animations (GSAP & Anime.js)
+         * 6. 3D Visualizer (Three.js)
+         */
+
+        const APP_NAME = 'Aura_Cinematic_Music';
+        
+        // --- 1. State Management ---
+        const state = {
+            queue: [],
+            currentIndex: -1,
+            isPlaying: false,
+            howl: null,
+            apiHost: null,
+            volume: 0.8,
+            isVisualizerActive: true,
+            theme: localStorage.getItem('theme') || 'dark',
+            searchTimeout: null
         };
 
-        document.getElementById('searchInput').oninput = () => renderPages();
-        audio.ontimeupdate = () => { if(!isNaN(audio.duration)) document.getElementById('pFill').style.width = (audio.currentTime/audio.duration*100) + "%"; };
-        document.getElementById('btnPlayPause').onclick = () => {
-            if(audio.paused) { audio.play(); document.getElementById('btnPlayPause').innerHTML='<i class="fas fa-pause"></i>'; }
-            else { audio.pause(); document.getElementById('btnPlayPause').innerHTML='<i class="fas fa-play"></i>'; }
+        // --- 2. Audius API Service ---
+        const API = {
+            async getHost() {
+                if (state.apiHost) return state.apiHost;
+                try {
+                    const res = await fetch('https://api.audius.co');
+                    const data = await res.json();
+                    state.apiHost = data.data[0];
+                    return state.apiHost;
+                } catch (e) {
+                    console.error("Audius host error:", e);
+                    return null; // Will trigger fallback data
+                }
+            },
+            async fetchTrending() {
+                const host = await this.getHost();
+                if (!host) return this.getFallbackData();
+                try {
+                    const res = await fetch(`${host}/v1/tracks/trending?app_name=${APP_NAME}&limit=12`);
+                    const json = await res.json();
+                    return json.data;
+                } catch (e) {
+                    return this.getFallbackData();
+                }
+            },
+            async searchTracks(query) {
+                const host = await this.getHost();
+                if (!host) return [];
+                try {
+                    const res = await fetch(`${host}/v1/tracks/search?query=${encodeURIComponent(query)}&app_name=${APP_NAME}&limit=12`);
+                    const json = await res.json();
+                    return json.data;
+                } catch (e) {
+                    return [];
+                }
+            },
+            getStreamUrl(trackId) {
+                if(!state.apiHost) return '';
+                return `${state.apiHost}/v1/tracks/${trackId}/stream?app_name=${APP_NAME}`;
+            },
+            getArtworkUrl(track, size='480x480') {
+                return track.artwork ? track.artwork[size] : `https://api.dicebear.com/7.x/shapes/svg?seed=${track.id}`;
+            },
+            // Fallback data if API is blocked by browser extensions/CORS
+            getFallbackData() {
+                return Array.from({length: 12}).map((_, i) => ({
+                    id: `mock_${i}`,
+                    title: `Cinematic Wave ${i+1}`,
+                    user: { name: `Aura Artist ${i+1}` },
+                    artwork: null,
+                    duration: 180 + (i * 10),
+                    isMock: true // identify mock
+                }));
+            }
         };
-        document.getElementById('songFile').onchange = function() { if(this.files[0]) document.getElementById('fileLabel').innerText="AUDIO READY"; };
+
+        // --- 3. Audio Player (Howler.js) ---
+        const Player = {
+            playTrack(index) {
+                if(index < 0 || index >= state.queue.length) return;
+                
+                state.currentIndex = index;
+                const track = state.queue[index];
+                
+                if (state.howl) {
+                    state.howl.unload();
+                }
+
+                if (track.isMock) {
+                    // Simulate playing a mock track
+                    this.updateUI(track);
+                    state.isPlaying = true;
+                    UI.togglePlayIcon(true);
+                    return;
+                }
+
+                const streamUrl = API.getStreamUrl(track.id);
+
+                state.howl = new Howl({
+                    src: [streamUrl],
+                    html5: true, // Force HTML5 Audio to bypass CORS stream issues and support large files
+                    volume: state.volume,
+                    format: ['mp3', 'aac'],
+                    onplay: () => {
+                        state.isPlaying = true;
+                        UI.togglePlayIcon(true);
+                        requestAnimationFrame(Player.step);
+                    },
+                    onpause: () => {
+                        state.isPlaying = false;
+                        UI.togglePlayIcon(false);
+                    },
+                    onend: () => {
+                        Player.next();
+                    },
+                    onloaderror: (id, err) => console.error("Howler Load Error:", err),
+                    onplayerror: (id, err) => {
+                        console.error("Howler Play Error:", err);
+                        state.howl.once('unlock', () => { state.howl.play(); });
+                    }
+                });
+
+                this.updateUI(track);
+                state.howl.play();
+                
+                // Trigger animations
+                Animations.onPlayTrigger(track);
+            },
+            togglePlay() {
+                if(!state.howl && state.queue.length > 0 && !state.queue[0].isMock) {
+                    this.playTrack(0);
+                    return;
+                }
+                
+                if (state.isPlaying) {
+                    state.howl?.pause();
+                    if(state.queue[state.currentIndex]?.isMock) state.isPlaying = false;
+                } else {
+                    state.howl?.play();
+                    if(state.queue[state.currentIndex]?.isMock) state.isPlaying = true;
+                }
+                UI.togglePlayIcon(state.isPlaying);
+            },
+            next() {
+                let nextIdx = state.currentIndex + 1;
+                if(nextIdx >= state.queue.length) nextIdx = 0; // loop back
+                this.playTrack(nextIdx);
+            },
+            prev() {
+                let prevIdx = state.currentIndex - 1;
+                if(prevIdx < 0) prevIdx = state.queue.length - 1;
+                this.playTrack(prevIdx);
+            },
+            seek(percent) {
+                if(state.howl && state.howl.playing()) {
+                    const duration = state.howl.duration();
+                    state.howl.seek(duration * percent);
+                }
+            },
+            setVolume(val) {
+                state.volume = val;
+                if(state.howl) state.howl.volume(val);
+            },
+            step() {
+                if (state.isPlaying && state.howl) {
+                    const seek = state.howl.seek() || 0;
+                    const duration = state.howl.duration() || 0;
+                    UI.updateProgress(seek, duration);
+                    requestAnimationFrame(Player.step);
+                }
+            },
+            updateUI(track) {
+                const coverUrl = API.getArtworkUrl(track);
+                document.getElementById('player-title').textContent = track.title;
+                document.getElementById('player-artist').textContent = track.user.name;
+                document.getElementById('player-cover').src = coverUrl;
+                document.getElementById('time-total').textContent = this.formatTime(track.duration);
+                
+                // Update dynamic background
+                document.getElementById('dynamic-bg').style.backgroundImage = `url(${coverUrl})`;
+
+                // Add to queue if not present (simple implementation)
+                if(!state.queue.find(t => t.id === track.id)) {
+                    state.queue.push(track);
+                    state.currentIndex = state.queue.length - 1;
+                }
+            },
+            formatTime(secs) {
+                const minutes = Math.floor(secs / 60) || 0;
+                const seconds = Math.floor(secs - minutes * 60) || 0;
+                return minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
+            }
+        };
+
+        // --- 4. UI Rendering ---
+        const UI = {
+            async init() {
+                this.setupTheme();
+                this.bindEvents();
+                Visualizer.init();
+                
+                // Load Initial Data
+                const tracks = await API.fetchTrending();
+                state.queue = [...tracks]; // Init queue with trending
+                this.renderTrending(tracks);
+                this.renderBanners(tracks.slice(0, 5));
+                this.renderCurated();
+
+                // GSAP Initial Reveal
+                gsap.from(".glass-panel", { y: 50, opacity: 0, duration: 1, stagger: 0.1, ease: "power3.out" });
+                gsap.from(".gsap-section", { y: 30, opacity: 0, duration: 0.8, stagger: 0.2, delay: 0.5, ease: "power2.out" });
+            },
+            
+            setupTheme() {
+                if (state.theme === 'dark') document.documentElement.classList.add('dark');
+                else document.documentElement.classList.remove('dark');
+
+                const toggleBtn = () => {
+                    document.documentElement.classList.toggle('dark');
+                    state.theme = document.documentElement.classList.contains('dark') ? 'dark' : 'light';
+                    localStorage.setItem('theme', state.theme);
+                    Visualizer.updateThemeColors();
+                };
+
+                document.getElementById('theme-toggle').addEventListener('click', toggleBtn);
+                document.getElementById('mobile-theme-toggle').addEventListener('click', toggleBtn);
+            },
+
+            bindEvents() {
+                // Player Controls
+                document.getElementById('btn-play').addEventListener('click', () => {
+                    anime({ targets: '#btn-play', scale: [0.9, 1.1, 1], duration: 400, easing: 'easeOutElastic(1, .8)' });
+                    Player.togglePlay();
+                });
+                document.getElementById('btn-next').addEventListener('click', () => Player.next());
+                document.getElementById('btn-prev').addEventListener('click', () => Player.prev());
+                
+                // Progress Bar Seek
+                const progContainer = document.getElementById('progress-container');
+                progContainer.addEventListener('click', (e) => {
+                    const rect = progContainer.getBoundingClientRect();
+                    const percent = (e.clientX - rect.left) / rect.width;
+                    Player.seek(percent);
+                    // Update visual instantly
+                    document.getElementById('progress-bar').style.width = `${percent * 100}%`;
+                });
+
+                // Volume
+                document.getElementById('volume-slider').addEventListener('input', (e) => {
+                    Player.setVolume(e.target.value / 100);
+                });
+
+                // Search
+                const searchInput = document.getElementById('search-input');
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(state.searchTimeout);
+                    const query = e.target.value.trim();
+                    if(query.length > 2) {
+                        state.searchTimeout = setTimeout(() => this.performSearch(query), 500);
+                    } else if(query.length === 0) {
+                        document.getElementById('search-view').classList.add('hidden');
+                        document.getElementById('home-view').classList.remove('hidden');
+                    }
+                });
+
+                // Visualizer Toggle
+                document.getElementById('btn-visualizer').addEventListener('click', () => {
+                    state.isVisualizerActive = !state.isVisualizerActive;
+                    document.getElementById('visualizer-container').style.opacity = state.isVisualizerActive ? '0.6' : '0';
+                    document.getElementById('btn-visualizer').classList.toggle('text-brand');
+                });
+
+                // Hover animations for buttons
+                document.querySelectorAll('.anime-hover').forEach(el => {
+                    el.addEventListener('mouseenter', () => anime({ targets: el, translateY: -2, duration: 200, easing: 'easeOutQuad' }));
+                    el.addEventListener('mouseleave', () => anime({ targets: el, translateY: 0, duration: 200, easing: 'easeOutQuad' }));
+                });
+            },
+
+            createTrackCard(track, index) {
+                const coverUrl = API.getArtworkUrl(track);
+                const isMock = track.isMock ? `<span class="absolute top-2 right-2 text-[10px] bg-black/50 text-white px-2 py-1 rounded backdrop-blur-sm">Mock</span>` : '';
+                
+                const div = document.createElement('div');
+                div.className = "group relative rounded-2xl overflow-hidden glass-panel p-3 cursor-pointer hover:-translate-y-2 transition-transform duration-300";
+                div.innerHTML = `
+                    <div class="relative w-full aspect-square rounded-xl overflow-hidden hover-card-img mb-3">
+                        <img data-src="${coverUrl}" class="lazyload w-full h-full object-cover" alt="Cover">
+                        ${isMock}
+                        <div class="play-overlay absolute inset-0 bg-black/40 opacity-0 flex items-center justify-center">
+                            <button class="w-12 h-12 rounded-full bg-brand text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform">
+                                <i class="ph-fill ph-play text-xl ml-1"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <h3 class="font-bold text-sm truncate text-gray-900 dark:text-white">${track.title}</h3>
+                    <p class="text-xs text-gray-500 dark:text-gray-400 truncate">${track.user.name}</p>
+                `;
+                div.addEventListener('click', () => {
+                    // Find track in queue or add it
+                    let qIdx = state.queue.findIndex(t => t.id === track.id);
+                    if(qIdx === -1) {
+                        state.queue.push(track);
+                        qIdx = state.queue.length - 1;
+                    }
+                    Player.playTrack(qIdx);
+                });
+                return div;
+            },
+
+            renderTrending(tracks) {
+                const grid = document.getElementById('trending-grid');
+                grid.innerHTML = '';
+                tracks.forEach((track, i) => {
+                    grid.appendChild(this.createTrackCard(track, i));
+                });
+            },
+
+            renderBanners(tracks) {
+                const wrapper = document.getElementById('banner-wrapper');
+                wrapper.innerHTML = '';
+                tracks.forEach(track => {
+                    const div = document.createElement('div');
+                    div.className = "swiper-slide relative h-64 md:h-80 rounded-3xl overflow-hidden cursor-pointer group";
+                    div.innerHTML = `
+                        <img data-src="${API.getArtworkUrl(track, '1000x1000')}" class="lazyload w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105" alt="Banner">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8">
+                            <span class="inline-block px-3 py-1 bg-brand text-white text-xs font-bold rounded-full w-max mb-3 backdrop-blur-md">Featured</span>
+                            <h2 class="text-3xl md:text-5xl font-extrabold text-white mb-2 drop-shadow-lg truncate">${track.title}</h2>
+                            <p class="text-lg text-gray-300 font-medium">${track.user.name}</p>
+                        </div>
+                    `;
+                    div.addEventListener('click', () => {
+                        let qIdx = state.queue.findIndex(t => t.id === track.id);
+                        if(qIdx === -1) { state.queue.push(track); qIdx = state.queue.length - 1; }
+                        Player.playTrack(qIdx);
+                    });
+                    wrapper.appendChild(div);
+                });
+
+                new Swiper('.bannerSwiper', {
+                    loop: true,
+                    effect: 'fade',
+                    fadeEffect: { crossFade: true },
+                    autoplay: { delay: 5000, disableOnInteraction: false },
+                    pagination: { el: '.swiper-pagination', clickable: true },
+                    navigation: { nextEl: '.swiper-button-next', prevEl: '.swiper-button-prev' },
+                });
+            },
+
+            renderCurated() {
+                const wrapper = document.getElementById('curated-wrapper');
+                const mockPlaylists = ['Chill Vibes', 'Workout Mix', 'Deep Focus', 'Midnight Drive', 'Indie Discover'];
+                mockPlaylists.forEach((name, i) => {
+                    const div = document.createElement('div');
+                    div.className = "swiper-slide w-48";
+                    div.innerHTML = `
+                        <div class="relative w-48 h-48 rounded-2xl overflow-hidden group cursor-pointer shadow-lg">
+                            <img data-src="https://api.dicebear.com/7.x/shapes/svg?seed=${name}" class="lazyload w-full h-full object-cover group-hover:scale-110 transition-transform duration-500">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-4">
+                                <h3 class="text-white font-bold">${name}</h3>
+                            </div>
+                        </div>
+                    `;
+                    wrapper.appendChild(div);
+                });
+
+                new Swiper('.playlistSwiper', {
+                    slidesPerView: 'auto',
+                    spaceBetween: 20,
+                    freeMode: true,
+                });
+            },
+
+            async performSearch(query) {
+                document.getElementById('home-view').classList.add('hidden');
+                document.getElementById('search-view').classList.remove('hidden');
+                document.getElementById('search-loading').classList.remove('hidden');
+                const grid = document.getElementById('search-grid');
+                grid.innerHTML = '';
+
+                const results = await API.searchTracks(query);
+                document.getElementById('search-loading').classList.add('hidden');
+                
+                if(results.length === 0) {
+                    grid.innerHTML = `<div class="col-span-full text-center text-gray-500 py-10">No tracks found in the void.</div>`;
+                    return;
+                }
+
+                results.forEach((track, i) => {
+                    grid.appendChild(this.createTrackCard(track, i));
+                });
+                
+                // Animate entrance
+                gsap.from("#search-grid > div", { y: 20, opacity: 0, duration: 0.5, stagger: 0.05 });
+            },
+
+            updateProgress(seek, duration) {
+                if(duration === 0) return;
+                const percent = (seek / duration) * 100;
+                document.getElementById('progress-bar').style.width = `${percent}%`;
+                document.getElementById('progress-bar-mini').style.width = `${percent}%`;
+                document.getElementById('time-current').textContent = Player.formatTime(seek);
+            },
+
+            togglePlayIcon(isPlaying) {
+                const icon = document.getElementById('play-icon');
+                if (isPlaying) {
+                    icon.classList.remove('ph-play');
+                    icon.classList.add('ph-pause');
+                    // Add pulse to cover
+                    document.getElementById('player-cover').classList.add('animate-spin-slow');
+                } else {
+                    icon.classList.remove('ph-pause');
+                    icon.classList.add('ph-play');
+                    document.getElementById('player-cover').classList.remove('animate-spin-slow');
+                }
+            }
+        };
+
+        // --- 5. Animations & Micro-interactions ---
+        const Animations = {
+            onPlayTrigger(track) {
+                // Pop the album art
+                anime({
+                    targets: '#player-cover',
+                    scale: [0.8, 1],
+                    duration: 600,
+                    easing: 'easeOutElastic(1, .8)'
+                });
+                
+                // Change Theme color dynamically based on cover art (Simulated with random hue for cinematic effect)
+                const randomHue = Math.floor(Math.random() * 360);
+                document.documentElement.style.setProperty('--brand-hue', randomHue);
+                // (In a real scenario, use canvas to extract dominant color. Kept simple for performance)
+            }
+        };
+
+        // --- 6. 3D Visualizer (Three.js) ---
+        // A cinematic particle field that reacts gently to state.isPlaying
+        const Visualizer = {
+            scene: null, camera: null, renderer: null, particles: null,
+            init() {
+                const container = document.getElementById('visualizer-container');
+                this.scene = new THREE.Scene();
+                this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                this.renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                container.appendChild(this.renderer.domElement);
+
+                // Create particles
+                const geometry = new THREE.BufferGeometry();
+                const count = 1500;
+                const positions = new Float32Array(count * 3);
+                const colors = new Float32Array(count * 3);
+                
+                const colorObj = new THREE.Color();
+                
+                for(let i = 0; i < count * 3; i+=3) {
+                    positions[i] = (Math.random() - 0.5) * 20;
+                    positions[i+1] = (Math.random() - 0.5) * 20;
+                    positions[i+2] = (Math.random() - 0.5) * 20;
+                    
+                    // Base color purple/pink mix
+                    colorObj.setHSL(0.7 + Math.random() * 0.2, 0.8, 0.5);
+                    colors[i] = colorObj.r;
+                    colors[i+1] = colorObj.g;
+                    colors[i+2] = colorObj.b;
+                }
+
+                geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+                const material = new THREE.PointsMaterial({
+                    size: 0.05,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8,
+                    blending: THREE.AdditiveBlending
+                });
+
+                this.particles = new THREE.Points(geometry, material);
+                this.scene.add(this.particles);
+
+                this.camera.position.z = 5;
+
+                window.addEventListener('resize', () => {
+                    this.camera.aspect = window.innerWidth / window.innerHeight;
+                    this.camera.updateProjectionMatrix();
+                    this.renderer.setSize(window.innerWidth, window.innerHeight);
+                });
+
+                this.animate();
+            },
+            updateThemeColors() {
+                // Subtle adjustment based on theme
+                if(this.particles) {
+                    this.particles.material.opacity = state.theme === 'dark' ? 0.8 : 0.4;
+                    this.particles.material.blending = state.theme === 'dark' ? THREE.AdditiveBlending : THREE.NormalBlending;
+                }
+            },
+            animate() {
+                requestAnimationFrame(() => this.animate());
+
+                if (!state.isVisualizerActive) return;
+
+                // Base rotation
+                this.particles.rotation.y += 0.001;
+                this.particles.rotation.x += 0.0005;
+
+                // Audio reactive simulation (since actual WebAudio API data requires CORS setup that Audius might block depending on endpoint)
+                if (state.isPlaying) {
+                    const time = Date.now() * 0.001;
+                    // Simulate bass pulse
+                    const pulse = 1 + Math.sin(time * 5) * 0.05; 
+                    this.particles.scale.set(pulse, pulse, pulse);
+                    this.particles.rotation.y += 0.002; // Spin faster
+                } else {
+                    // Return to normal scale smoothly
+                    this.particles.scale.lerp(new THREE.Vector3(1,1,1), 0.05);
+                }
+
+                this.renderer.render(this.scene, this.camera);
+            }
+        };
+
+        // --- Initialize Application ---
+        document.addEventListener('DOMContentLoaded', () => {
+            UI.init();
+        });
+
     </script>
 </body>
 </html>
+
